@@ -1,9 +1,7 @@
 # Welbot-V2
--Welbot을 바탕으로 발전시킨 V2
-'''
-챗봇 주소 : https://narco.iptime.org:8081/rest/chat/
-REST서버 주소 : https://narco.iptime.org:8081/
-'''
+-Welbot을 바탕으로 발전시킨 V2<br>
+챗봇 주소 : https://narco.iptime.org:8081/rest/chat/ <br>
+REST서버 주소 : https://narco.iptime.org:8081/ <br>
 
 ## 1. 추가구현사항
 1) 사용자 맞춤형 서비스
@@ -18,8 +16,7 @@ REST서버 주소 : https://narco.iptime.org:8081/
 
 
 ## 2. 한계점
-- fetch method에서 가져온 위치,날씨 정보와 Facebook의 사용자id값을 동시에 받아올 수 없음.
-
+- fetch method에서 가져온 위치,날씨 정보와 Facebook의 사용자id값을 동시에 받아올 수 없음.<br>
 (Facebook에서 기술지원 중지로, 사용자의 위치,날씨 정보 지원중지)
 
 - 사용자정보와 데이터가 충분하지 못해 맞춤형 서비스 및 추천 알고리즘 구현 실패.
