@@ -5,7 +5,7 @@ from . import views
 app_name = 'rest'
 
 urlpatterns = [
-    path('test/', views.index, name='test'),
+    path('chat/', views.index, name='chat'),
     path('city_init/', views.city_init, name='city_init'),
     path('infra_init/', views.infra_init, name='infra_init'),
     path('edu_init/', views.edu_init, name='edu_init'),
@@ -22,4 +22,5 @@ urlpatterns = [
     path('academy_lecture/', views.academy_lect_init, name='academy_lecture_init'),
     path('api/', views.webhook, name='api'),
     path('auth/', views.auth, name='auth'),
+    path('user_init/', views.user_init, name='user_init'),
     ]

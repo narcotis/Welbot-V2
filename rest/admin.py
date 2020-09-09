@@ -27,3 +27,4 @@ admin.site.register(Culture_genre)
 admin.site.register(Exhibition)
 admin.site.register(Culture_Event)
 
+admin.site.register(User)

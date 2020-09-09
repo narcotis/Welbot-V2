@@ -12,6 +12,8 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import datetime
 import random
+import requests
+from bs4 import BeautifulSoup
 
 module_dir = os.path.dirname(__file__)
 query_result = None
@@ -104,7 +106,7 @@ class CultureEventViewSet(viewsets.ModelViewSet):
     
 
 def index(request):
-    return render(request, 'rest/test.html')
+    return render(request, 'rest/index.html')
     
     
 def city_init(request):
@@ -646,10 +648,10 @@ def handler(data):
         response = welfare_handler(data)
     elif data['queryResult']['intent']['displayName'] == '(lecture_all)request_lecture(lecture_type) - custom':
         response = lecture_handler(data)
-    
+    elif data['queryResult']['intent']['displayName'] == 'location_init()':
+        response = location_handler(data)
     return response
-
-
+    
 @csrf_exempt
 def webhook(request):
     if request.method == 'POST':
@@ -671,15 +673,15 @@ def webhook(request):
 def culture_genre_handler(data):
     global query_result, query_idx
     valid_data(data)
-    genre = data['queryResult']['parameters']['genre']
+    genre = data['queryResult']['parameters']['genre'][0]
     contexts = data['queryResult']['outputContexts']
-    
+    print(genre)
     if '/' in genre:
         genre = genre.replace('/', '_')
         
     if genre == '전시_관람':
         if query_result == None:
-            query_result = Exhibition.objects.filter(availiable = True).values()
+            query_result = Exhibition.objects.filter(available = True).values()
             print(query_result)
             query_idx = len(query_result)
         
@@ -689,13 +691,43 @@ def culture_genre_handler(data):
             query_result = Culture_Event.objects.filter(genre = Culture_genre.objects.get(name=genre), available = True).values()
             print(query_result)
             query_idx = len(query_result)
+            print(query_idx)
         
         result = check_left()
         
     genre = genre.replace('_', '/')
     
     if result == None:
-        text = "요청하신 "+genre+" 문화행사에 대해서 현재 참여 가능한 행사가 없습니다! ㅠㅠ"
+        text = "요청하신 "+genre+" 문화행사에 대해서 현재 참여 가능한 행사가 없습니다! :("
+        text += "\n다른 장르를 선택해주세요!"
+        fb = {'payload':{'facebook':
+                         {'quick_replies':[
+                             {'content_type':'text',
+                              'title':'클래식',
+                                 'payload':'클래식'},
+                             {'content_type':'text',
+                              'title':'뮤지컬/오페라',
+                                 'payload':'뮤지컬/오페라'},
+                             {'content_type':'text',
+                              'title':'전시회',
+                                 'payload':'전시회'},
+                             {'content_type':'text',
+                              'title':'연극',
+                                 'payload':'연극'},
+                             {'content_type':'text',
+                              'title':'콘서트',
+                                 'payload':'콘서트'},
+                             {'content_type':'text',
+                              'title':'국악',
+                                 'payload':'국악'},
+                             {'content_type':'text',
+                              'title':'무용',
+                                 'payload':'무용'},
+                             {'content_type':'text',
+                              'title':'전시/관람',
+                                 'payload':'전시/관람'}
+                             ], 'text': text}}}
+        response = {'fulfillmentMessages':[fb], 'outputContexts':contexts}
     else :
         text = "요청하신 "+genre+" 문화행사의 정보입니다!\n\n"
         if genre == '전시/관람':
@@ -703,9 +735,14 @@ def culture_genre_handler(data):
         else : 
             flag = 1
         text = make_text(text, result, flag)
-      
-    response = {'fulfillmentMessages': [{'text':{'text':[text]}}],
+        num_list = []
+        for i  in range(len(result)):
+            tmp = {'content_type':'text','title':str(int(i+1))+'번','payload':str(i+1)+'번'}
+            num_list.append(tmp)
+        fb = {'payload':{'facebook':{'quick_replies':num_list, 'text':text}}}
+        response = {'fulfillmentMessages': [fb],
                 'outputContexts':contexts}
+        
     return response
 
 
@@ -716,8 +753,12 @@ def valid_data(data):
     
     exhibit = Exhibition.objects.all().values()
     event = Culture_Event.objects.all().values()
-    date = datetime.datetime.now().date()
-    time = datetime.datetime.now().time()
+    #date = datetime.datetime.now().date()
+    #time = datetime.datetime.now().time()
+    
+    date = datetime.datetime.strptime("2020-08-05", "%Y-%m-%d")
+    time = datetime.datetime.strptime("12:00", "%H:%M")
+    
     print(date, time)
     for val in exhibit:
         try:
@@ -746,41 +787,52 @@ def make_text(text, result, flag):
         text += str(i+1)+'번\n'
         text += '행사명 : '+val['name']+'\n'
     
-    text += '요청하신 정보입니다! 원하시는 행사번호를 골라주세요!'
+    text += '\n요청하신 정보입니다! 원하시는 행사번호를 골라주세요!'
     
     return text 
     
     
     
-def ex_make_text(text, result, flag):
+def ex_make_text(result, flag):
     if len(result) == 0:
         return None
-    
+    print(type(result))
     text = ''
+    elements = []
+    
     if flag == 0:
-        for i, val in result:
-            text += '행사명 : '+val['name']
-            text += '\n장소 : '+val['location']
-            text += '\n참여대상 : '+val['target']
-            text += '\n전화번호 : '+val['tel']
-            text += '\nURL : '+val['URL']
-            text += '\n사진 : '+val['image']
-            text += '\n시작시간 : '+val['starttime']
-            text += '\n종료시간 : '+val['endtime']
-    else :
-        for i, val in result:
-            text += '행사명 : '+val['name']
-            text += '\n장소 : '+val['location']
-            text += '\n요금 : '+val['fare']
-            text += '\n참여대상 : '+val['target']
-            text += '\n전화번호 : '+val['tel']
-            text += '\nURL : '+val['URL']
-            text += '\n사진 : '+val['image']
-            text += '\n시작날짜 : '+val['startdate']
-            text += '\n종료날짜 : '+val['enddate']
+        text += '행사명 : '+result['name']
+        text += '\n장소 : '+result['location']
+        text += '\n참여대상 : '+result['target']
+        text += '\n전화번호 : '+result['tel']
+        text += '\n홈페이지 : '+result['url']
+        if result['image'] != '없음' and result['image'] != None:
+            image = result['image']
+        try:
+            text += '\n시작시간 : '+datetime.datetime.strftime(result['starttime'], "%H:%M")
+            text += '\n종료시간 : '+datetime.datetime.strftime(result['endtime'], "%H:%M")
+        except:
+            pass
+    else:
+        text += '행사명 : '+result['name']
+        text += '\n장소 : '+result['location']
+        text += '\n요금 : '+result['fare']
+        text += '\n참여대상 : '+result['target']
+        text += '\n홈페이지 : '+result['url']
+        if result['image'] != '없음' and result['image'] != None:
+            image = result['image']
+        try:
+            text += '\n시작날짜 : '+datetime.datetime.strftime(result['startdate'], "%Y-%m-%d")
+            text += '\n종료날짜 : '+datetime.datetime.strftime(result['enddate'], "%Y-%m-%d")
+        except:
+            pass
         
-    text += '요청하신 정보입니다! 혹시 더 필요하신 정보가 있으신가요?'
-    return text
+    text += '\n\n요청하신 정보입니다! 혹시 더 필요하신 정보가 있으신가요?'
+    if image != '':
+        fb = {'attachment':{'type':'image','payload':{'url': image}}}
+    
+    print(fb)
+    return fb, text
 
 def check_left():
     global query_idx, query_result, idx
@@ -829,7 +881,7 @@ def senior_center_handler(data):
     #print(text)
     
     #response = {'fulfillmentText':text}
-    response = {'fulfillmentMessages': [{'text':{'text':[text]}}],
+    response = {'fulfillmentMessages': [{'text':{'text': [text] }}],
                 'outputContexts':contexts}
     
     #response = {'fulfillmentMessages':texts}
@@ -860,9 +912,11 @@ def select_culture_handler(data):
     
     number = int(data['queryResult']['parameters']['number'])
     contexts = data['queryResult']['outputContexts']
+    
+    
     print(idx, number)
     try :
-        result = query_result[idx+number-1]
+        result = query_result[number-1]
     except :
         text = '잘못된 요청입니다. 처음부터 다시 시작해주세요!'
         response = {'fulfillmentMessages': [{'text':{'text':[text]}}],
@@ -874,8 +928,8 @@ def select_culture_handler(data):
     else :
         flag = 1
     
-    text = ex_make_text('', result, flag)
-    response = {'fulfillmentMessages': [{'text':{'text':[text]}}],
+    fb, text = ex_make_text(result, flag)
+    response = {'fulfillmentMessages': [{'text':{'text': [text]}}, {'facebook':fb}], 
                 'outputContexts':contexts}
     
     
@@ -888,7 +942,42 @@ def welcome_handler(data):
      validated = False
      idx = 0
      
-     return 'Okay'
+     id = data['originalDetectIntentRequest']['payload']['data']['sender']['id']
+     res = requests.get("https://narco.iptime.org:8081/rest/chat/")
+     
+     soup = BeautifulSoup(res.text, 'html.parser')
+     
+     lat = soup.find('input', id_='lat')
+     lon = soup.find('input', id_='lon')
+     temp = soup.find('input', id_='temp')
+     weather = soup.find('input', id_='weather')
+     print(id, lat, lon, temp, weather)
+     
+     user = {'id':id,'lat':lat, 'lon':lon, 'temp':temp, 'weather':weather}
+     
+     text = user_init(user)
+     
+     
+     
+     return text
+    
+
+def user_init(user):
+    result = None
+    
+    try:
+        result = User.objects.get(id = user['id'])
+        result.lat = user['lat']
+        result.lon = user['lon']
+        result.temp = user['temp']
+        result.weather = user['weather']
+        
+    except :
+        result = User(id = user['id'], lat=user['lat'], lon=user['lon'], temp=user['temp'], weather = user['weather'])
+        
+    #result.save()
+       
+    return 'Done'
     
 def trail_handler(data):
     global query_idx, query_result
@@ -897,8 +986,8 @@ def trail_handler(data):
     city = data['queryResult']['parameters']['city']
     
     trail_course_list = Course.objects.filter(city__contains = city).values()
-    print(len(trail_course_list))
     idx = random.randint(0, len(trail_course_list))
+    print(len(trail_course_list), idx)
     dict = {'0':'입문', '1':'초급', '2':'중급'}
     text = city+'의 추천코스 입니다.\n'
     text += trail_course_list[idx]['type_id']+'의 '+trail_course_list[idx]['name']+'를 추천해드릴게요.\n'
@@ -1001,4 +1090,13 @@ def academy_handler(data):
 
 def auth(request):
     return render(request, 'rest/welbot.html')
+
+
+def location_handler(data):
+    
+    return response
+    
+
+
+
 

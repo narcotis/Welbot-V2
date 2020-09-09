@@ -1,0 +1,106 @@
+
+<script>
+const getGeo = () => {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+};
+
+const getWeather = (lat, lon) => {
+  return new Promise((resolve, reject) => {
+    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=6c04e9cd2950a779090cbb08cb3de1a0`)
+      .then(res => res.json())
+      .then(resolve)
+      .catch(reject);
+  });
+};
+
+const sendData = ({ lat, lon, temp, weather }) => {
+  const body = {
+    // sessionId: messenger.getAttribute("session-id"),
+    location: {
+      lat,
+      lon,
+    },
+    temp,
+    weather,
+  };
+
+  fetch("https://narco.iptime.org:8081/rest/user_init/", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  })
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+    })
+    .catch(error => {
+      console.log(error);
+    });
+};
+
+
+const windowLoad = () => {
+  let lat = 0;
+  let lon = 0;
+  let temp = 0;
+  let weather = 0;
+  getGeo()
+    .then(data => {
+      lat = data.coords.latitude;
+      lon = data.coords.longitude;
+      return getWeather(lat, lon);
+    })
+    .then(data => {
+      temp = data.main.temp;
+      weather = data.weather[0]['description'];
+//      sendData({ lat, lon, temp, weather });
+      document.getElementById("lat").value = lat;
+      document.getElementById("lon").value = lon;
+      document.getElementById("temp").value = temp;
+      document.getElementById("weather").value = weather;
+    })
+    .catch(error => {
+      throw error;
+    });
+};
+window.onload = windowLoad;
+</script>
+
+
+
+
+<input type="hidden" id="lat" value='0'>
+<input type="hidden" id="lon" value='0'>
+<input type="hidden" id="temp" value='0'>
+<input type="hidden" id="weather" value='none'>
+
+<!— Load Facebook SDK for JavaScript —>
+      <div id="fb-root"></div>
+      <script>
+        window.fbAsyncInit = function() {
+          FB.init({
+            xfbml            : true,
+            version          : 'v8.0'
+          });
+        };
+
+        (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = 'https://connect.facebook.net/ko_KR/sdk/xfbml.customerchat.js';
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));</script>
+
+      <!— Your Chat Plugin code —>
+      <div class="fb-customerchat"
+        attribution=setup_tool
+        page_id="111271960695831"
+  logged_in_greeting="안녕하세요 웰봇입니다 :)"
+  logged_out_greeting="안녕하세요 웰봇입니다 :)">
+      </div>

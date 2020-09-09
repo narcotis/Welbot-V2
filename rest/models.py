@@ -148,8 +148,14 @@ class Culture_Event(models.Model):
     url = models.URLField(max_length = 300)
     image = models.URLField()
 
+class User(models.Model):
+    id = models.CharField(max_length = 20, primary_key = True)
+    lat = models.FloatField()  #위도 Y
+    lon = models.FloatField()  #경도 X
+    temp = models.FloatField()
+    weather = models.CharField(max_length = 15)
     
-    
+
     
     
     
