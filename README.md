@@ -1,7 +1,6 @@
 # Welbot-V2
 -Welbot을 바탕으로 발전시킨 V2\
 챗봇 주소 : https://narco.iptime.org:8081/rest/chat/
- 
 REST서버 주소 : https://narco.iptime.org:8081/
 
 
