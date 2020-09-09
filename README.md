@@ -4,14 +4,14 @@
 REST서버 주소 : https://narco.iptime.org:8081/ <br>
 
 ## 1. 추가구현사항
-  1) 사용자 맞춤형 서비스
+  1) 사용자 맞춤형 서비스<br>
     - 웹에서 fetch method를 통하여 사용자의 위치정보(lat, lon), 날씨정보(temp, weather) 가져옴.
 
-  2) 사용자 id를 위한 Facebook 확장.
+  2) 사용자 id를 위한 Facebook 확장.<br>
     - Dialogflow와 Facebook의 integration을 통하여 Facebook의 암호화된 'id'값을 통해 사용자 특정 가능.
 
-  3) 사용자의 접근성 및 편의성 향상.
-    - 기존의 텍스트 방식에서 버튼형 투입.
+  3) 사용자의 접근성 및 편의성 향상.<br>
+    - 기존의 텍스트 방식에서 버튼형 투입.<br>
     - 기존에 구현이 덜 되었던 알고리즘 추가.
 
 
